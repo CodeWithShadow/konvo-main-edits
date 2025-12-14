@@ -19,10 +19,8 @@
     <title>Konvo // Anonymous Chat</title>
     
     <!-- Favicon & Icons -->
-    <!-- Use favicon.png for best cross-browser tab compatibility (generated from icon.jpg) -->
     <link rel="icon" type="image/png" href="/favicon.png?v=8" />
     <link rel="shortcut icon" type="image/png" href="/favicon.png?v=8" />
-    <!-- Keep icon.jpg as a fallback/source asset -->
     <link rel="icon" type="image/jpeg" href="/icon.jpg?v=8" />
     <link rel="apple-touch-icon" href="/icon.jpg" />
     
@@ -41,6 +39,9 @@
       rel="stylesheet"
     />
     
+    <!-- GSAP Animation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    
     <!-- Compiled Stylesheet (includes Tailwind) -->
     <link rel="stylesheet" href="dist/style.css" />
   </head>
@@ -50,9 +51,13 @@
     <header
       class="flex justify-between items-center px-3 py-3 border-b border-[#333333] bg-[#0a0a0a] gap-2 z-10 h-14"
     >
-      <h1 class="text-base sm:text-2xl font-bold text-white tracking-tight shrink-0">
-        KONVO
-      </h1>
+      <!-- KONVO Logo with Snow Animation -->
+      <div class="konvo-logo-container shrink-0">
+        <canvas id="snowCanvas"></canvas>
+        <h1 id="konvoTitle" class="text-base sm:text-2xl font-bold text-white tracking-tight">
+          KONVO
+        </h1>
+      </div>
       
       <div class="flex items-center gap-2 overflow-hidden flex-1 justify-end">
         <nav class="flex text-[10px] sm:text-base font-medium gap-1 sm:gap-4 shrink">
@@ -246,80 +251,80 @@
       </div>
 
       <!-- Confession Form -->
-<form 
-  id="confessionForm" 
-  class="hidden gap-3 border-t border-[#333] relative"
-  aria-label="Post a confession"
->
-  <label for="confessionInput" class="sr-only">Type your confession</label>
+      <form 
+        id="confessionForm" 
+        class="hidden gap-3 border-t border-[#333] relative"
+        aria-label="Post a confession"
+      >
+        <label for="confessionInput" class="sr-only">Type your confession</label>
 
-  <div class="relative flex-1">
-    <textarea
-      id="confessionInput"
-      rows="1"
-      class="w-full resize-none focus:outline-none text-sm pr-16"
-      placeholder="Type your confession..."
-      required
-      maxlength="500"
-      autocomplete="off"
-      spellcheck="true"
-    ></textarea>
+        <div class="relative flex-1">
+          <textarea
+            id="confessionInput"
+            rows="1"
+            class="w-full resize-none focus:outline-none text-sm pr-16"
+            placeholder="Type your confession..."
+            required
+            maxlength="500"
+            autocomplete="off"
+            spellcheck="true"
+          ></textarea>
 
-    <!-- Character Counter -->
-    <span 
-      id="confessionCharCount" 
-      class="char-counter"
-      aria-live="polite"
-      aria-label="Character count"
-    >0/500</span>
-  </div>
-  
-  <button
-    id="confessionButton"
-    type="submit"
-    class="px-5 py-2 rounded-lg font-bold text-sm bg-white text-black hover:bg-[#cccccc] transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white"
-  >
-    POST
-  </button>
-</form>
+          <!-- Character Counter -->
+          <span 
+            id="confessionCharCount" 
+            class="char-counter"
+            aria-live="polite"
+            aria-label="Character count"
+          >0/500</span>
+        </div>
+        
+        <button
+          id="confessionButton"
+          type="submit"
+          class="px-5 py-2 rounded-lg font-bold text-sm bg-white text-black hover:bg-[#cccccc] transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white"
+        >
+          POST
+        </button>
+      </form>
 
       <!-- Chat Form -->
       <form 
-      id="chatForm" 
-      class="flex gap-3 border-t border-[#333] relative"
-      aria-label="Send a message"
->
-      <label for="chatInput" class="sr-only">Type a message</label>
+        id="chatForm" 
+        class="flex gap-3 border-t border-[#333] relative"
+        aria-label="Send a message"
+      >
+        <label for="chatInput" class="sr-only">Type a message</label>
 
-      <div class="relative flex-1">
-        <textarea
-        id="chatInput"
-        rows="1"
-        class="w-full resize-none focus:outline-none text-sm pr-16"
-        placeholder="Type a message..."
-        required
-        maxlength="500"
-        autocomplete="off"
-        spellcheck="true"
-        ></textarea>
+        <div class="relative flex-1">
+          <textarea
+            id="chatInput"
+            rows="1"
+            class="w-full resize-none focus:outline-none text-sm pr-16"
+            placeholder="Type a message..."
+            required
+            maxlength="500"
+            autocomplete="off"
+            spellcheck="true"
+          ></textarea>
 
-        <!-- Character Counter -->
-        <span 
-         id="chatCharCount" 
-         class="char-counter"
-         aria-live="polite"
-         aria-label="Character count"
-        >0/500</span>
-      </div>
-  
-  <button
-    id="chatButton"
-    type="submit"
-    class="px-5 py-2 rounded-lg font-bold text-sm bg-white text-black hover:bg-[#cccccc] transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white"
-  >
-    SEND
-  </button>
-</form>
+          <!-- Character Counter -->
+          <span 
+            id="chatCharCount" 
+            class="char-counter"
+            aria-live="polite"
+            aria-label="Character count"
+          >0/500</span>
+        </div>
+        
+        <button
+          id="chatButton"
+          type="submit"
+          class="px-5 py-2 rounded-lg font-bold text-sm bg-white text-black hover:bg-[#cccccc] transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white"
+        >
+          SEND
+        </button>
+      </form>
     </main>
 
     <!-- Profile Modal -->
@@ -460,6 +465,9 @@
       </ul>
     </div>
 
+    <!-- Snow Animation Script -->
+    <script src="snow-animation.js"></script>
+    
     <!-- App Script -->
     <script type="module" src="app.js"></script>
   </body>
