@@ -1373,3 +1373,172 @@ body.selection-mode .message-bubble {
     display: none !important;
   }
 }
+
+/* ============================
+   34. LIQUID BACKGROUND
+   ============================ */
+
+.liquid-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.liquid-background canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.liquid-background.disabled {
+  display: none !important;
+}
+
+/* ============================
+   35. THEME TOGGLE BUTTON STATES
+   ============================ */
+
+/* Snow theme active */
+#themeToggleButton.theme-snow {
+  color: #60a5fa !important;
+  background-color: rgba(96, 165, 250, 0.15);
+}
+
+/* Liquid theme active */
+#themeToggleButton.theme-liquid {
+  color: #a78bfa !important;
+  background-color: rgba(167, 139, 250, 0.15);
+}
+
+/* Off state */
+#themeToggleButton.theme-off {
+  color: var(--text-muted);
+}
+
+#themeToggleButton.theme-off:hover {
+  color: var(--text-main);
+}
+
+/* ============================
+   36. LIQUID THEME ENABLED STYLES
+   ============================ */
+
+/* Feed container - transparent to show liquid */
+.liquid-theme-enabled #feedContainer {
+  background-color: rgba(10, 10, 10, 0.5) !important;
+}
+
+/* Header - semi-transparent with blur */
+.liquid-theme-enabled header {
+  background-color: rgba(10, 10, 10, 0.8) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Message bubbles - glassmorphism effect */
+.liquid-theme-enabled .message-bubble {
+  background-color: rgba(28, 28, 28, 0.85) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(167, 139, 250, 0.3) !important;
+  box-shadow: 0 4px 20px rgba(167, 139, 250, 0.1);
+}
+
+.liquid-theme-enabled .my-message {
+  background-color: rgba(38, 38, 38, 0.85) !important;
+  border-color: rgba(167, 139, 250, 0.4) !important;
+}
+
+/* Message bubble hover effect */
+.liquid-theme-enabled .message-bubble:hover {
+  box-shadow: 0 8px 30px rgba(167, 139, 250, 0.2);
+  border-color: rgba(167, 139, 250, 0.5) !important;
+}
+
+/* Forms - semi-transparent */
+.liquid-theme-enabled #chatForm,
+.liquid-theme-enabled #confessionForm {
+  background-color: rgba(10, 10, 10, 0.85) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Other elements */
+.liquid-theme-enabled #replyBar {
+  background-color: rgba(28, 28, 28, 0.9) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.liquid-theme-enabled #selectionBar {
+  background-color: rgba(28, 28, 28, 0.9) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.liquid-theme-enabled #pinnedMessageBar {
+  background-color: rgba(28, 28, 28, 0.9) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.liquid-theme-enabled #typingIndicator {
+  background-color: transparent !important;
+}
+
+/* Modals with liquid theme */
+.liquid-theme-enabled .modal-base {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.liquid-theme-enabled .modal-content {
+  background-color: rgba(28, 28, 28, 0.95) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: rgba(167, 139, 250, 0.3) !important;
+}
+
+/* Context menu with liquid theme */
+.liquid-theme-enabled #contextMenu {
+  background-color: rgba(28, 28, 28, 0.95) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(167, 139, 250, 0.3) !important;
+}
+
+/* Reaction picker with liquid theme */
+.liquid-theme-enabled .reaction-picker {
+  background-color: rgba(28, 28, 28, 0.95) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(167, 139, 250, 0.3) !important;
+}
+
+/* Subtle purple accent for liquid theme */
+.liquid-theme-enabled .nav-item.active {
+  border-bottom-color: #a78bfa;
+  color: #a78bfa;
+}
+
+/* Scroll to bottom button */
+.liquid-theme-enabled #scrollToBottomBtn {
+  background-color: rgba(28, 28, 28, 0.9);
+  border-color: rgba(167, 139, 250, 0.4);
+}
+
+.liquid-theme-enabled #scrollToBottomBtn:hover {
+  background-color: #a78bfa;
+  border-color: #a78bfa;
+}
+
+/* Reduced motion - disable liquid background */
+@media (prefers-reduced-motion: reduce) {
+  .liquid-background {
+    display: none !important;
+  }
+}

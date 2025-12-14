@@ -1,184 +1,199 @@
 // ============================================================
-// KONVO FULL SCREEN SNOW BACKGROUND
-// Version: 1.5 (Slower snowflakes)
+// SNOW BACKGROUND - Canvas Snowfall Effect
 // ============================================================
+'use strict';
 
 (function() {
-  'use strict';
-  
-  console.log('Snow background script loaded');
-  
-  var canvas, ctx;
-  var snowflakes = [];
-  var isEnabled = true;
-  var animationId = null;
-  var SNOWFLAKE_COUNT = 150;
-  
-  function init() {
-    console.log('Initializing snow background...');
-    
-    var container = document.getElementById('snowBackground');
-    canvas = document.getElementById('bgSnowCanvas');
-    var toggleBtn = document.getElementById('themeToggleButton');
-    
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'snowBackground';
-      container.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;overflow:hidden;';
-      document.body.insertBefore(container, document.body.firstChild);
-    }
-    
-    if (!canvas) {
-      canvas = document.createElement('canvas');
-      canvas.id = 'bgSnowCanvas';
-      canvas.style.cssText = 'display:block;width:100%;height:100%;';
-      container.appendChild(canvas);
-    }
-    
-    ctx = canvas.getContext('2d');
-    
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    
-    var saved = localStorage.getItem('konvo-snow-theme');
-    isEnabled = saved !== 'disabled';
-    
-    createSnowflakes();
-    
-    if (toggleBtn) {
-      toggleBtn.onclick = function() {
-        toggle();
-      };
-      updateButton(toggleBtn);
-    }
-    
-    updateVisibility();
-    
-    if (isEnabled) {
-      startAnimation();
-    }
-    
-    document.addEventListener('visibilitychange', function() {
-      if (document.hidden) {
-        stopAnimation();
-      } else if (isEnabled) {
-        startAnimation();
-      }
-    });
-    
-    console.log('✅ Snow background initialized!');
-  }
-  
+  // State
+  let isEnabled = false;
+  let animationId = null;
+  let snowflakes = [];
+
+  // DOM Elements
+  const snowBackground = document.getElementById('snowBackground');
+  const canvas = document.getElementById('bgSnowCanvas');
+  const ctx = canvas ? canvas.getContext('2d') : null;
+
+  // Configuration
+  const CONFIG = {
+    snowflakeCount: 150,
+    minSize: 1,
+    maxSize: 4,
+    minSpeed: 0.5,
+    maxSpeed: 2,
+    wind: 0.5
+  };
+
+  /**
+   * Initialize canvas size
+   */
   function resizeCanvas() {
     if (!canvas) return;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   }
-  
-  function createSnowflakes() {
+
+  /**
+   * Create a snowflake
+   * @returns {Object} Snowflake object
+   */
+  function createSnowflake() {
+    return {
+      x: Math.random() * (canvas?.width || window.innerWidth),
+      y: Math.random() * (canvas?.height || window.innerHeight) - (canvas?.height || window.innerHeight),
+      size: Math.random() * (CONFIG.maxSize - CONFIG.minSize) + CONFIG.minSize,
+      speed: Math.random() * (CONFIG.maxSpeed - CONFIG.minSpeed) + CONFIG.minSpeed,
+      opacity: Math.random() * 0.5 + 0.5,
+      wobble: Math.random() * Math.PI * 2
+    };
+  }
+
+  /**
+   * Initialize snowflakes
+   */
+  function initSnowflakes() {
     snowflakes = [];
-    for (var i = 0; i < SNOWFLAKE_COUNT; i++) {
-      snowflakes.push({
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        radius: 1 + Math.random() * 3,
-        speed: 0.15 + Math.random() * 0.4,   // SLOW falling speed
-        wind: -0.2 + Math.random() * 0.4,    // GENTLE horizontal drift
-        opacity: 0.3 + Math.random() * 0.7
-      });
+    for (let i = 0; i < CONFIG.snowflakeCount; i++) {
+      const flake = createSnowflake();
+      flake.y = Math.random() * (canvas?.height || window.innerHeight);
+      snowflakes.push(flake);
     }
   }
-  
-  function animate() {
-    if (!ctx || !canvas || !isEnabled) return;
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    for (var i = 0; i < snowflakes.length; i++) {
-      var s = snowflakes[i];
-      
-      s.y += s.speed;
-      s.x += s.wind;
-      
-      if (s.y > canvas.height + 10) {
-        s.y = -10;
-        s.x = Math.random() * canvas.width;
+
+  /**
+   * Update snowflake positions
+   */
+  function updateSnowflakes() {
+    const width = canvas?.width || window.innerWidth;
+    const height = canvas?.height || window.innerHeight;
+
+    snowflakes.forEach(flake => {
+      flake.y += flake.speed;
+      flake.x += Math.sin(flake.wobble) * CONFIG.wind;
+      flake.wobble += 0.01;
+
+      // Reset snowflake if it goes off screen
+      if (flake.y > height) {
+        flake.y = -flake.size;
+        flake.x = Math.random() * width;
       }
-      if (s.x > canvas.width + 10) s.x = -10;
-      if (s.x < -10) s.x = canvas.width + 10;
-      
+      if (flake.x > width) flake.x = 0;
+      if (flake.x < 0) flake.x = width;
+    });
+  }
+
+  /**
+   * Draw snowflakes on canvas
+   */
+  function drawSnowflakes() {
+    if (!ctx || !canvas) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    snowflakes.forEach(flake => {
       ctx.beginPath();
-      ctx.arc(s.x, s.y, Math.max(0.5, s.radius), 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255, 255, 255, ' + s.opacity + ')';
+      ctx.arc(flake.x, flake.y, flake.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${flake.opacity})`;
       ctx.fill();
-    }
-    
+    });
+  }
+
+  /**
+   * Animation loop
+   */
+  function animate() {
+    if (!isEnabled) return;
+
+    updateSnowflakes();
+    drawSnowflakes();
     animationId = requestAnimationFrame(animate);
   }
-  
-  function startAnimation() {
-    if (animationId) return;
+
+  /**
+   * Enable snow effect
+   */
+  function enableSnow() {
+    if (isEnabled) return;
+
     isEnabled = true;
+
+    if (snowBackground) {
+      snowBackground.classList.remove('disabled');
+    }
+
+    resizeCanvas();
+    initSnowflakes();
     animate();
+
+    document.body.classList.add('snow-theme-enabled');
+    console.log('Snow background enabled');
   }
-  
-  function stopAnimation() {
+
+  /**
+   * Disable snow effect
+   */
+  function disableSnow() {
+    if (!isEnabled) return;
+
+    isEnabled = false;
+
     if (animationId) {
       cancelAnimationFrame(animationId);
       animationId = null;
     }
+
+    if (ctx && canvas) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    if (snowBackground) {
+      snowBackground.classList.add('disabled');
+    }
+
+    document.body.classList.remove('snow-theme-enabled');
+    console.log('Snow background disabled');
   }
-  
-  function toggle() {
-    isEnabled = !isEnabled;
-    localStorage.setItem('konvo-snow-theme', isEnabled ? 'enabled' : 'disabled');
-    updateVisibility();
-    updateButton(document.getElementById('themeToggleButton'));
-    
+
+  /**
+   * Toggle snow effect
+   * @returns {boolean} New enabled state
+   */
+  function toggleSnow() {
     if (isEnabled) {
-      startAnimation();
+      disableSnow();
+      return false;
     } else {
-      stopAnimation();
-      if (ctx && canvas) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
+      enableSnow();
+      return true;
     }
   }
-  
-  function updateVisibility() {
-    var container = document.getElementById('snowBackground');
-    
+
+  /**
+   * Check if snow is enabled
+   * @returns {boolean}
+   */
+  function isSnowEnabled() {
+    return isEnabled;
+  }
+
+  // Handle window resize
+  window.addEventListener('resize', () => {
     if (isEnabled) {
-      if (container) container.style.display = 'block';
-      document.body.classList.add('snow-theme-enabled');
-    } else {
-      if (container) container.style.display = 'none';
-      document.body.classList.remove('snow-theme-enabled');
+      resizeCanvas();
     }
-  }
-  
-  function updateButton(btn) {
-    if (!btn) return;
-    
-    if (isEnabled) {
-      btn.style.color = '#60a5fa';
-      btn.classList.add('active');
-      btn.title = 'Snow: ON';
-    } else {
-      btn.style.color = '';
-      btn.classList.remove('active');
-      btn.title = 'Snow: OFF';
-    }
-  }
-  
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-  
-  window.addEventListener('load', function() {
-    if (!canvas || !ctx) init();
   });
-  
+
+  // Start with snow disabled
+  if (snowBackground) {
+    snowBackground.classList.add('disabled');
+  }
+
+  // Expose API globally
+  window.SnowController = {
+    enable: enableSnow,
+    disable: disableSnow,
+    toggle: toggleSnow,
+    isEnabled: isSnowEnabled
+  };
+
 })();
