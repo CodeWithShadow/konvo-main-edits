@@ -1,174 +1,158 @@
 // ============================================================
-// KONVO SNOW ANIMATION
-// Version: 1.0
+// KONVO SNOW ANIMATION (Logo)
+// Version: 1.3 (Fixed negative radius)
 // ============================================================
 'use strict';
 
 function initKonvoSnowAnimation() {
+  console.log('Initializing KONVO logo snow...');
+  
   if (typeof gsap === 'undefined') {
-    console.warn('GSAP not loaded, snow animation disabled');
+    console.warn('GSAP not loaded');
     return;
   }
 
-  const canvas = document.getElementById('snowCanvas');
-  const title = document.getElementById('konvoTitle');
+  var canvas = document.getElementById('snowCanvas');
+  var title = document.getElementById('konvoTitle');
   
   if (!canvas || !title) {
-    console.warn('Snow animation elements not found');
+    console.warn('Logo elements not found');
     return;
   }
 
-  const ctx = canvas.getContext('2d');
+  var ctx = canvas.getContext('2d');
   
-  const updateCanvasSize = () => {
-    const isMobile = window.innerWidth < 640;
+  function updateSize() {
+    var isMobile = window.innerWidth < 640;
     canvas.width = isMobile ? 120 : 200;
     canvas.height = isMobile ? 45 : 60;
-  };
-  
-  updateCanvasSize();
-  
-  const offscreenCanvas = document.createElement('canvas');
-  offscreenCanvas.width = canvas.width;
-  offscreenCanvas.height = canvas.height;
-  const offscreenCtx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
-  
-  const drawTextMask = () => {
-    offscreenCtx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
-    offscreenCtx.fillStyle = '#ffffff';
-    
-    const isMobile = window.innerWidth < 640;
-    const fontSize = isMobile ? 14 : 22;
-    
-    offscreenCtx.font = `bold ${fontSize}px Inter, sans-serif`;
-    offscreenCtx.textAlign = 'center';
-    offscreenCtx.textBaseline = 'middle';
-    offscreenCtx.fillText('KONVO', offscreenCanvas.width / 2, offscreenCanvas.height / 2 + 2);
-  };
-  
-  drawTextMask();
-  
-  const particles = [];
-  const maxParticles = 150;
-  const maxAccumulatedParticles = 500;
-  
-  function createParticle(index, fastForward = false) {
-    const particle = {
-      index: index,
-      x: 0,
-      y: 0,
-      size: 0,
-      drift: 0,
-      speed: 0,
-      opacity: 1,
-      accumulated: false,
-      timeline: null
-    };
-    
-    particles.push(particle);
-    
-    particle.timeline = gsap.timeline({ 
-      repeat: -1, 
-      repeatRefresh: true,
-      onRepeat: () => {
-        particle.accumulated = false;
-        particle.opacity = 1;
-      }
-    })
-    .fromTo(
-      particle,
-      {
-        x: () => Math.random() * canvas.width,
-        y: -5,
-        size: () => 0.5 + Math.random() * 2,
-        drift: () => -30 + Math.random() * 60,
-        speed: () => 0.3 + Math.random() * 0.7,
-        opacity: 1
-      },
-      {
-        y: canvas.height + 5,
-        x: `+=${particle.drift}`,
-        duration: 3,
-        ease: 'none'
-      }
-    );
-    
-    if (fastForward) {
-      particle.timeline.seek(Math.random() * 3);
-    }
-    
-    particle.timeline.timeScale(particle.speed);
-    
-    return particle;
   }
   
-  for (let i = 0; i < maxParticles; i++) {
-    createParticle(i, true);
+  updateSize();
+  
+  // Offscreen canvas for text collision
+  var offscreen = document.createElement('canvas');
+  offscreen.width = canvas.width;
+  offscreen.height = canvas.height;
+  var offCtx = offscreen.getContext('2d', { willReadFrequently: true });
+  
+  function drawText() {
+    offCtx.clearRect(0, 0, offscreen.width, offscreen.height);
+    offCtx.fillStyle = '#fff';
+    var fontSize = window.innerWidth < 640 ? 14 : 22;
+    offCtx.font = 'bold ' + fontSize + 'px Inter, sans-serif';
+    offCtx.textAlign = 'center';
+    offCtx.textBaseline = 'middle';
+    offCtx.fillText('KONVO', offscreen.width / 2, offscreen.height / 2 + 2);
+  }
+  
+  drawText();
+  
+  // Particles
+  var particles = [];
+  var maxParticles = 80;
+  
+  function createParticle(randomY) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: randomY ? Math.random() * canvas.height : -5,
+      size: 0.5 + Math.random() * 1.5,
+      speedY: 0.2 + Math.random() * 0.5,
+      speedX: -0.2 + Math.random() * 0.4,
+      opacity: 0.5 + Math.random() * 0.5,
+      stuck: false,
+      fade: false
+    });
+  }
+  
+  // Create initial particles
+  for (var i = 0; i < maxParticles; i++) {
+    createParticle(true);
   }
   
   function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    particles.forEach((particle) => {
-      if (!particle.timeline) return;
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
       
-      if (particle.timeline.isActive() && !particle.accumulated) {
-        const px = Math.floor(particle.x);
-        const py = Math.floor(particle.y);
+      // Skip dead particles
+      if (p.opacity <= 0) {
+        p.x = Math.random() * canvas.width;
+        p.y = -5;
+        p.opacity = 0.5 + Math.random() * 0.5;
+        p.stuck = false;
+        p.fade = false;
+        continue;
+      }
+      
+      // Move if not stuck
+      if (!p.stuck) {
+        p.y += p.speedY;
+        p.x += p.speedX;
         
-        if (px >= 0 && px < offscreenCanvas.width && py >= 0 && py < offscreenCanvas.height) {
-          const imageData = offscreenCtx.getImageData(px, py, 1, 1);
-          
-          if (imageData.data[3] > 100 && Math.random() > 0.3) {
-            particle.accumulated = true;
-            particle.timeline.pause();
-            
-            gsap.to(particle, {
-              opacity: 0,
-              duration: 2 + Math.random() * 3,
-              onComplete: () => {
-                particle.timeline.resume();
-                particle.opacity = 1;
-                particle.accumulated = false;
-              }
-            });
-            
-            if (particles.length < maxAccumulatedParticles) {
-              createParticle(particles.length, false);
+        // Check collision with text
+        var px = Math.floor(p.x);
+        var py = Math.floor(p.y);
+        
+        if (px >= 0 && px < offscreen.width && py >= 0 && py < offscreen.height) {
+          try {
+            var data = offCtx.getImageData(px, py, 1, 1);
+            if (data.data[3] > 100 && Math.random() > 0.5) {
+              p.stuck = true;
+              p.fade = true;
             }
-          }
+          } catch (e) {}
+        }
+        
+        // Reset if out of bounds
+        if (p.y > canvas.height + 5) {
+          p.x = Math.random() * canvas.width;
+          p.y = -5;
+        }
+        if (p.x < -5) p.x = canvas.width + 5;
+        if (p.x > canvas.width + 5) p.x = -5;
+      }
+      
+      // Fade out stuck particles
+      if (p.fade) {
+        p.opacity -= 0.008;
+        if (p.opacity <= 0) {
+          p.x = Math.random() * canvas.width;
+          p.y = -5;
+          p.opacity = 0.5 + Math.random() * 0.5;
+          p.stuck = false;
+          p.fade = false;
         }
       }
       
-      if (particle.opacity > 0) {
-        ctx.beginPath();
-        ctx.globalAlpha = particle.opacity * 0.8;
-        ctx.fillStyle = '#ffffff';
-        
-        const sizeMultiplier = gsap.utils.interpolate(1, 0.3, particle.y / canvas.height);
-        const drawSize = particle.size * sizeMultiplier;
-        
-        ctx.arc(particle.x, particle.y, drawSize, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-    });
+      // Draw - ALWAYS ensure positive radius
+      var drawSize = Math.max(0.3, p.size);
+      var drawOpacity = Math.max(0, Math.min(1, p.opacity));
+      
+      ctx.beginPath();
+      ctx.globalAlpha = drawOpacity;
+      ctx.fillStyle = '#ffffff';
+      ctx.arc(p.x, p.y, drawSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    ctx.globalAlpha = 1;
   }
   
+  // Use GSAP ticker
   gsap.ticker.add(render);
   
-  let resizeTimeout;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-      updateCanvasSize();
-      offscreenCanvas.width = canvas.width;
-      offscreenCanvas.height = canvas.height;
-      drawTextMask();
-    }, 250);
+  // Handle resize
+  window.addEventListener('resize', function() {
+    updateSize();
+    offscreen.width = canvas.width;
+    offscreen.height = canvas.height;
+    drawText();
   });
   
-  document.addEventListener('visibilitychange', () => {
+  // Pause when hidden
+  document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
       gsap.ticker.remove(render);
     } else {
@@ -176,9 +160,10 @@ function initKonvoSnowAnimation() {
     }
   });
   
-  console.log('Konvo snow animation initialized');
+  console.log('✅ KONVO logo snow initialized!');
 }
 
+// Initialize
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initKonvoSnowAnimation);
 } else {
