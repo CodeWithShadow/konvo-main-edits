@@ -1,6 +1,6 @@
 // ============================================================
 // KONVO FULL SCREEN SNOW BACKGROUND
-// Version: 1.4 (Fixed)
+// Version: 1.5 (Slower snowflakes)
 // ============================================================
 
 (function() {
@@ -17,23 +17,18 @@
   function init() {
     console.log('Initializing snow background...');
     
-    // Get or create elements
     var container = document.getElementById('snowBackground');
     canvas = document.getElementById('bgSnowCanvas');
     var toggleBtn = document.getElementById('themeToggleButton');
     
-    // Create container if missing
     if (!container) {
-      console.log('Creating snow container...');
       container = document.createElement('div');
       container.id = 'snowBackground';
       container.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;overflow:hidden;';
       document.body.insertBefore(container, document.body.firstChild);
     }
     
-    // Create canvas if missing
     if (!canvas) {
-      console.log('Creating canvas...');
       canvas = document.createElement('canvas');
       canvas.id = 'bgSnowCanvas';
       canvas.style.cssText = 'display:block;width:100%;height:100%;';
@@ -42,18 +37,14 @@
     
     ctx = canvas.getContext('2d');
     
-    // Set canvas size
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     
-    // Load saved preference
     var saved = localStorage.getItem('konvo-snow-theme');
     isEnabled = saved !== 'disabled';
     
-    // Create snowflakes
     createSnowflakes();
     
-    // Setup toggle button
     if (toggleBtn) {
       toggleBtn.onclick = function() {
         toggle();
@@ -61,15 +52,12 @@
       updateButton(toggleBtn);
     }
     
-    // Apply initial visibility
     updateVisibility();
     
-    // Start animation if enabled
     if (isEnabled) {
       startAnimation();
     }
     
-    // Pause when tab hidden
     document.addEventListener('visibilitychange', function() {
       if (document.hidden) {
         stopAnimation();
@@ -94,8 +82,8 @@
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
         radius: 1 + Math.random() * 3,
-        speed: 0.5 + Math.random() * 1.5,
-        wind: -0.5 + Math.random() * 1,
+        speed: 0.15 + Math.random() * 0.4,   // SLOW falling speed
+        wind: -0.2 + Math.random() * 0.4,    // GENTLE horizontal drift
         opacity: 0.3 + Math.random() * 0.7
       });
     }
@@ -109,11 +97,9 @@
     for (var i = 0; i < snowflakes.length; i++) {
       var s = snowflakes[i];
       
-      // Move snowflake
       s.y += s.speed;
       s.x += s.wind;
       
-      // Wrap around screen
       if (s.y > canvas.height + 10) {
         s.y = -10;
         s.x = Math.random() * canvas.width;
@@ -121,7 +107,6 @@
       if (s.x > canvas.width + 10) s.x = -10;
       if (s.x < -10) s.x = canvas.width + 10;
       
-      // Draw snowflake
       ctx.beginPath();
       ctx.arc(s.x, s.y, Math.max(0.5, s.radius), 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(255, 255, 255, ' + s.opacity + ')';
@@ -146,11 +131,7 @@
   
   function toggle() {
     isEnabled = !isEnabled;
-    
-    // Save preference
     localStorage.setItem('konvo-snow-theme', isEnabled ? 'enabled' : 'disabled');
-    
-    // Update UI
     updateVisibility();
     updateButton(document.getElementById('themeToggleButton'));
     
@@ -162,8 +143,6 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
     }
-    
-    console.log('Snow theme:', isEnabled ? 'ON' : 'OFF');
   }
   
   function updateVisibility() {
@@ -184,26 +163,22 @@
     if (isEnabled) {
       btn.style.color = '#60a5fa';
       btn.classList.add('active');
-      btn.title = 'Snow: ON (Click to disable)';
+      btn.title = 'Snow: ON';
     } else {
       btn.style.color = '';
       btn.classList.remove('active');
-      btn.title = 'Snow: OFF (Click to enable)';
+      btn.title = 'Snow: OFF';
     }
   }
   
-  // Initialize when ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
   
-  // Backup initialization
   window.addEventListener('load', function() {
-    if (!canvas || !ctx) {
-      init();
-    }
+    if (!canvas || !ctx) init();
   });
   
 })();
